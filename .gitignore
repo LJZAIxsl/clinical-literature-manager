@@ -1,0 +1,11 @@
+# Dependencies
+node_modules/
+
+# Local editor / OS files
+.DS_Store
+Thumbs.db
+*.swp
+
+# Local data exports (user backups)
+*.local.json
+literature-backup*.json
