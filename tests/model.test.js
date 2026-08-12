@@ -4,6 +4,7 @@ import {
   buildEntry,
   validateEntry,
   normalizeTags,
+  normalizeTag,
   normalizeYear,
   normalizeRating,
   evidenceLabel,
@@ -66,4 +67,18 @@ test('evidenceLabel / typeLabel respect language', () => {
   assert.equal(evidenceLabel('high', 'en'), EVIDENCE_LEVELS.high.en);
   assert.equal(typeLabel('rct', 'zh'), ENTRY_TYPES.rct.zh);
   assert.equal(evidenceLabel(null, 'zh'), '未评级');
+});
+
+test('normalizeTag merges synonyms (case-insensitive for latin aliases)', () => {
+  assert.equal(normalizeTag('心梗'), '心肌梗死');
+  assert.equal(normalizeTag('MI'), '心肌梗死');
+  assert.equal(normalizeTag('mi'), '心肌梗死');
+  assert.equal(normalizeTag('HTN'), '高血压');
+  assert.equal(normalizeTag('房颤'), '心房颤动');
+  assert.equal(normalizeTag(''), null);
+});
+
+test('normalizeTags applies synonym merging and dedupes', () => {
+  const tags = normalizeTags(['心梗', 'mi', '高血压', '高血压']);
+  assert.deepEqual(tags, ['心肌梗死', '高血压']);
 });
