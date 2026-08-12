@@ -25,8 +25,15 @@
   Search & filter by text, type, specialty, tag, evidence level, min rating, with sorting.
 - **DOI 自动填充**：输入 DOI 即可通过 Crossref 公共 API 自动补全题名、作者、年份、来源。
   Auto-fill metadata from a DOI via the public Crossref API.
-- **导入 / 导出**：支持 JSON / CSV / Markdown 导出，JSON 导入（便于备份与迁移）。
-  Import / export as JSON / CSV / Markdown for backup and portability.
+- **导入 / 导出**：支持 JSON / CSV / Markdown / **BibTeX** 导出，JSON 导入（便于备份与迁移）。
+  Import / export as JSON / CSV / Markdown / **BibTeX** for backup and portability.
+- **批量导入**：在「批量导入」中输入多个 DOI 或 PMID（每行一个），自动经
+  Crossref / PubMed 解析后入库。Batch import many DOIs / PMIDs at once.
+- **标签自动补全与同义词合并**：标签框带历史标签自动补全；`心梗 / mi / MI`、
+  `房颤 / af` 等别名会自动合并为规范词，保证筛选一致。
+  Tag autocomplete plus synonym merging (e.g. 心梗→心肌梗死, af→心房颤动).
+- **一键加载示例文献**：内置 6 条真实经典临床文献（Sepsis-3、高血压、房颤、
+  ARDS、急性冠脉综合征、糖尿病指南），首屏即见内容。Load curated sample references.
 - **统计面板**：按专科、按证据等级聚合，展示条目总数与平均评分。
   A dashboard aggregating entries by specialty and evidence level.
 - **中英文界面**：一键切换。 Bilingual UI (中文 / English).
@@ -72,8 +79,9 @@ clinical-literature-manager/
 │   ├── store.js          # 持久化层（localStorage / 可注入存储）
 │   ├── search.js         # 搜索与筛选（纯函数）
 │   ├── importExport.js   # JSON / CSV / Markdown 导入导出（纯函数）
-│   ├── crossref.js       # DOI 元数据获取
+│   ├── crossref.js       # DOI / PMID 元数据获取
 │   ├── i18n.js           # 中英文案
+│   ├── samples.js        # 内置示例文献
 │   └── app.js            # UI 控制器
 ├── tests/                # Node 单元测试
 └── docs/DATA_MODEL.md    # 数据模型说明
@@ -89,12 +97,17 @@ Contributions are welcome — new fields, export formats, UI improvements, trans
 ## 📌 路线图 / Roadmap
 
 参见 [Issues](https://github.com/LJZAIxsl/clinical-literature-manager/issues) 中的
-`enhancement` 标签。Roadmap items are tracked as `enhancement` issues, e.g.:
+`enhancement` 标签。Roadmap items are tracked as `enhancement` issues.
 
-- BibTeX 导出 / BibTeX export
-- Crossref / PubMed 批量导入 / batch import
-- 标签自动补全与同义词 / tag autocomplete & synonyms
+**已实现 / Implemented**
+- ✅ BibTeX 导出 / BibTeX export
+- ✅ Crossref / PubMed 批量导入 / batch import
+- ✅ 标签自动补全与同义词 / tag autocomplete & synonyms
+- ✅ 示例文献 / sample references
+
+**规划中 / Planned**
 - 多库（项目）管理 / multiple libraries
+- 可选云同步 / optional cloud sync
 
 ## ⚠️ 免责声明 / Disclaimer
 
