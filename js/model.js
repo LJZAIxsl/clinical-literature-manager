@@ -34,12 +34,58 @@ export function uuid() {
   });
 }
 
+// Lightweight tag synonym map: canonical <- alias.
+// Merges equivalent tags entered in different forms so filtering stays consistent
+// (e.g. 心肌梗塞 / 心梗 / MI all collapse to 心肌梗死).
+export const TAG_SYNONYMS = {
+  // 心血管
+  '心肌梗塞': '心肌梗死',
+  '心梗': '心肌梗死',
+  'mi': '心肌梗死',
+  '房颤': '心房颤动',
+  'af': '心房颤动',
+  'afib': '心房颤动',
+  '高血压病': '高血压',
+  'htn': '高血压',
+  'vte': '静脉血栓栓塞',
+  // 呼吸
+  'ards': '急性呼吸窘迫综合征',
+  // 内分泌 / 代谢
+  '糖尿病': '2型糖尿病',
+  't2dm': '2型糖尿病',
+  'dm': '2型糖尿病',
+  // 感染
+  '败血症': '脓毒症',
+  'sepis': '脓毒症',
+  // 肾
+  'aki': '急性肾损伤',
+  'ckd': '慢性肾脏病',
+  // 神经
+  'cva': '卒中',
+  '中风': '卒中',
+  // 通用
+  'rct': '随机对照试验',
+  'guideline': '临床指南',
+  '指南': '临床指南',
+};
+
+// Normalize a single tag: trims, applies synonym mapping (case-insensitive for
+// latin aliases), and returns null for empty input.
+export function normalizeTag(t) {
+  const s = (t == null ? '' : String(t)).trim();
+  if (!s) return null;
+  if (TAG_SYNONYMS[s]) return TAG_SYNONYMS[s];
+  const lower = s.toLowerCase();
+  if (TAG_SYNONYMS[lower]) return TAG_SYNONYMS[lower];
+  return s;
+}
+
 export function normalizeTags(tags) {
   if (!Array.isArray(tags)) return [];
   const out = [];
   for (const t of tags) {
     if (typeof t !== 'string') continue;
-    const s = t.trim();
+    const s = normalizeTag(t);
     if (s && !out.includes(s)) out.push(s);
   }
   return out;
