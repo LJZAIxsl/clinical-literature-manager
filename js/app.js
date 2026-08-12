@@ -5,8 +5,9 @@ import { createI18n } from './i18n.js';
 import { ENTRY_TYPES, EVIDENCE_LEVELS, typeLabel, evidenceLabel } from './model.js';
 import { createStore } from './store.js';
 import { searchEntries, collectFacets } from './search.js';
-import { exportJSON, parseImport, exportCSV, exportMarkdown } from './importExport.js';
-import { lookupDOI } from './crossref.js';
+import { exportJSON, parseImport, exportCSV, exportMarkdown, exportBibTeX } from './importExport.js';
+import { lookupDOI, lookupPMID } from './crossref.js';
+import { SAMPLE_ENTRIES } from './samples.js';
 
 const $ = (id) => document.getElementById(id);
 const i18n = createI18n('zh');
@@ -81,13 +82,20 @@ function refreshFacetSelects() {
   // restore previous selection if still present
   if (state.specialty && specPairs.some((p) => p[0] === state.specialty)) $('f-specialty').value = state.specialty;
   if (state.tag && tagPairs.some((p) => p[0] === state.tag)) $('f-tag').value = state.tag;
-  // datalist for specialty input
-  const dl = $('specialty-list');
-  dl.innerHTML = '';
+  // datalists for specialty and tag inputs (autocomplete from existing facets)
+  const dlSpec = $('specialty-list');
+  dlSpec.innerHTML = '';
   for (const s of facets.specialties) {
     const o = document.createElement('option');
     o.value = s;
-    dl.appendChild(o);
+    dlSpec.appendChild(o);
+  }
+  const dlTag = $('tag-list');
+  dlTag.innerHTML = '';
+  for (const t of facets.tags) {
+    const o = document.createElement('option');
+    o.value = t;
+    dlTag.appendChild(o);
   }
 }
 
@@ -109,6 +117,12 @@ function renderLabels() {
   $('export-json').textContent = i18n.t('exportJSON');
   $('export-csv').textContent = i18n.t('exportCSV');
   $('export-md').textContent = i18n.t('exportMD');
+  $('export-bib').textContent = i18n.t('exportBibTeX');
+  $('batch-import-btn').textContent = i18n.t('batchImport');
+  $('load-samples').textContent = i18n.t('loadSamples');
+  $('batch-import-title').textContent = i18n.t('batchImportTitle');
+  $('batch-import-hint').textContent = i18n.t('batchImportHint');
+  $('batch-import-start').textContent = i18n.t('batchImportStart');
   document.querySelector('label[for="import-file"]').textContent = i18n.t('importJSON');
   $('about-text').textContent = i18n.t('about');
   // refresh select labels that depend on language
@@ -335,6 +349,62 @@ function bindEvents() {
     reader.readAsText(file);
     e.target.value = '';
   });
+
+  $('export-bib').addEventListener('click', () => download('literature.bib', exportBibTeX(store.getAll()), 'application/x-bibtex'));
+
+  $('load-samples').addEventListener('click', () => {
+    const existing = new Set(store.getAll().map((e) => e.title));
+    let added = 0;
+    for (const s of SAMPLE_ENTRIES) {
+      if (existing.has(s.title)) continue;
+      const res = store.addEntry(s);
+      if (!res.error) added += 1;
+    }
+    renderAll();
+    toast(`${i18n.t('samplesLoaded')}: +${added}`);
+  });
+
+  $('batch-import-btn').addEventListener('click', () => $('batch-modal').classList.remove('hidden'));
+  $('batch-close').addEventListener('click', () => $('batch-modal').classList.add('hidden'));
+  $('batch-cancel').addEventListener('click', () => $('batch-modal').classList.add('hidden'));
+  $('batch-modal').addEventListener('click', (e) => { if (e.target === $('batch-modal')) $('batch-modal').classList.add('hidden'); });
+  $('batch-start').addEventListener('click', runBatchImport);
+}
+
+// Resolve a list of DOIs / PMIDs (one per line) via Crossref / PubMed and add
+// each successfully resolved record to the store.
+async function runBatchImport() {
+  const raw = $('batch-input').value;
+  const lines = raw.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+  if (!lines.length) { toast(i18n.t('batchImportHint'), 'error'); return; }
+  $('batch-status').textContent = '';
+  let ok = 0;
+  let fail = 0;
+  const fails = [];
+  for (let i = 0; i < lines.length; i++) {
+    const token = lines[i];
+    $('batch-status').textContent = `${i18n.t('batchImportProgress')} ${i + 1}/${lines.length}: ${token}`;
+    try {
+      const meta = /^\d+$/.test(token) ? await lookupPMID(token) : await lookupDOI(token);
+      const res = store.addEntry({
+        title: meta.title || token,
+        authors: meta.authors || '',
+        year: meta.year,
+        source: meta.source || '',
+        doi: meta.doi || '',
+        url: meta.url || '',
+        type: 'other',
+      });
+      if (res.error) { fail += 1; fails.push(`${token}: ${res.error}`); }
+      else ok += 1;
+    } catch (err) {
+      fail += 1; fails.push(`${token}: ${err.message}`);
+    }
+  }
+  $('batch-status').textContent =
+    `${i18n.t('batchImportDone')} — ${ok} OK, ${fail} failed` + (fails.length ? `\n${fails.join('\n')}` : '');
+  if (ok) { renderAll(); toast(`${i18n.t('batchImportDone')}: +${ok}`); }
+  if (fail) toast(`${fail} failed`, 'error');
 }
 
 function download(filename, content, mime) {
