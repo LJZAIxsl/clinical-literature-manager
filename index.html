@@ -67,8 +67,11 @@
         <button id="export-json" class="btn btn-ghost" type="button">导出 JSON</button>
         <button id="export-csv" class="btn btn-ghost" type="button">导出 CSV</button>
         <button id="export-md" class="btn btn-ghost" type="button">导出 Markdown</button>
+        <button id="export-bib" class="btn btn-ghost" type="button">导出 BibTeX</button>
         <label class="btn btn-ghost" for="import-file">导入 JSON</label>
         <input id="import-file" type="file" accept=".json,application/json" hidden />
+        <button id="load-samples" class="btn btn-ghost" type="button">加载示例文献</button>
+        <button id="batch-import-btn" class="btn btn-ghost" type="button">批量导入</button>
       </div>
     </section>
 
@@ -126,7 +129,8 @@
           </div>
           <div class="field">
             <label for="f-tags">标签（逗号分隔）</label>
-            <input id="f-tags" class="input" type="text" placeholder="高血压, 抗凝, 急诊" />
+            <input id="f-tags" class="input" type="text" list="tag-list" placeholder="高血压, 抗凝, 急诊" />
+            <datalist id="tag-list"></datalist>
           </div>
         </div>
         <div class="grid-2">
@@ -158,6 +162,24 @@
         </div>
         <p id="form-error" class="form-error hidden"></p>
       </form>
+    </div>
+  </div>
+
+  <!-- Batch import modal -->
+  <div id="batch-modal" class="modal hidden" role="dialog" aria-modal="true">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h2 id="batch-import-title">批量导入（DOI / PMID）</h2>
+        <button id="batch-close" class="btn btn-ghost" type="button">✕</button>
+      </div>
+      <p id="batch-import-hint" class="muted" style="margin:0 0 12px"></p>
+      <textarea id="batch-input" class="input" rows="8" placeholder="10.1001/jama.2016.0287&#10;35927031&#10;10.1161/HYP.0000000000000065"></textarea>
+      <div class="form-actions">
+        <span class="spacer"></span>
+        <button id="batch-cancel" class="btn btn-ghost" type="button">取消</button>
+        <button id="batch-start" class="btn btn-primary" type="button">解析并导入</button>
+      </div>
+      <pre id="batch-status" class="batch-status"></pre>
     </div>
   </div>
 
