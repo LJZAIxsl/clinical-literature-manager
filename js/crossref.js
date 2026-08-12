@@ -35,3 +35,38 @@ export async function lookupDOI(doi) {
     url: msg.URL || `https://doi.org/${clean}`,
   };
 }
+
+// Resolve a PubMed ID (PMID) into metadata via the public NCBI E-utilities
+// (https://eutils.ncbi.nlm.nih.gov). No API key required. Works in the browser
+// and in Node 18+ (global fetch).
+export async function lookupPMID(pmid) {
+  const id = String(pmid || '').trim();
+  if (!/^\d+$/.test(id)) throw new Error('PMID must be numeric');
+  const url = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=pubmed&id=${encodeURIComponent(id)}&retmode=json`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`PubMed responded ${res.status}`);
+  const data = await res.json();
+  const result = data && data.result && data.result[id];
+  if (!result) throw new Error('PubMed record not found');
+
+  const title = result.title || '';
+  const authors = (result.authors || [])
+    .map((a) => a.name || '')
+    .filter(Boolean)
+    .join(', ');
+  const pubdate = result.pubdate || '';
+  const year = pubdate ? Number(pubdate.slice(0, 4)) : null;
+  const source = result.fulljournalname || result.source || '';
+  const doiObj = (result.articleids || []).find((x) => x.idtype === 'doi');
+  const doi = doiObj ? doiObj.value : '';
+  const url = doi ? `https://doi.org/${doi}` : `https://pubmed.ncbi.nlm.nih.gov/${id}/`;
+
+  return {
+    title,
+    authors,
+    year: year && !Number.isNaN(year) ? year : null,
+    source,
+    doi,
+    url,
+  };
+}
