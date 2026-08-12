@@ -53,6 +53,19 @@ export const STRINGS = {
     zh: '数据仅存储在你的浏览器本地（localStorage），不会上传到任何服务器。可使用导出/导入功能备份与迁移。',
     en: 'Data is stored only in your browser (localStorage) and never uploaded. Use export/import to back up or migrate.',
   },
+  exportBibTeX: { zh: '导出 BibTeX', en: 'Export BibTeX' },
+  batchImport: { zh: '批量导入', en: 'Batch import' },
+  loadSamples: { zh: '加载示例文献', en: 'Load samples' },
+  batchImportTitle: { zh: '批量导入（DOI / PMID）', en: 'Batch import (DOI / PMID)' },
+  batchImportHint: {
+    zh: '每行输入一个 DOI 或 PMID，系统通过 Crossref / PubMed 自动解析后入库。纯数字视为 PMID，其余视为 DOI。',
+    en: 'One DOI or PMID per line. Resolved via Crossref / PubMed and added to your library. Numeric input is treated as a PMID.',
+  },
+  batchImportStart: { zh: '解析并导入', en: 'Resolve & import' },
+  batchImportDone: { zh: '批量导入完成', en: 'Batch import complete' },
+  batchImportProgress: { zh: '正在解析', en: 'Resolving' },
+  samplesLoaded: { zh: '已加载示例文献', en: 'Sample entries loaded' },
+  tagSynonymsNote: { zh: '同义标签（如 心梗→心肌梗死）会自动合并', en: 'Synonym tags (e.g. 心梗→心肌梗死) are merged automatically' },
 };
 
 export function createI18n(initialLang = 'zh') {
