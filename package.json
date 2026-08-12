@@ -1,0 +1,22 @@
+{
+  "name": "clinical-literature-manager",
+  "version": "1.0.0",
+  "description": "A local-first, open-source tool for clinicians to organize guidelines, papers and evidence.",
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/"
+  },
+  "keywords": [
+    "clinical",
+    "evidence-based-medicine",
+    "guidelines",
+    "literature",
+    "medical",
+    "references"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/LJZAIxsl/clinical-literature-manager.git"
+  }
+}
