@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>临床文献与指南管理器 · Clinical Literature Manager</title>
+  <meta name="description" content="A local-first, open-source tool for clinicians to organize guidelines, papers and evidence." />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="brand">
+      <span class="logo" aria-hidden="true">📚</span>
+      <div>
+        <h1 id="app-title">临床文献与指南管理器</h1>
+        <p id="app-subtitle" class="subtitle"></p>
+      </div>
+    </div>
+    <button id="lang-toggle" class="btn btn-ghost" type="button">EN</button>
+  </header>
+
+  <main class="container">
+    <section id="toolbar" class="toolbar">
+      <div class="search-row">
+        <input id="search" class="input search-input" type="search" placeholder="搜索标题、作者、来源、标签、DOI…" />
+        <button id="add-btn" class="btn btn-primary" type="button">＋ 新增条目</button>
+      </div>
+      <div class="filters">
+        <label class="filter">
+          <span id="lbl-type" class="filter-label">类型</span>
+          <select id="f-type" class="input"></select>
+        </label>
+        <label class="filter">
+          <span id="lbl-specialty" class="filter-label">专科</span>
+          <select id="f-specialty" class="input"></select>
+        </label>
+        <label class="filter">
+          <span id="lbl-tag" class="filter-label">标签</span>
+          <select id="f-tag" class="input"></select>
+        </label>
+        <label class="filter">
+          <span id="lbl-evidence" class="filter-label">证据等级</span>
+          <select id="f-evidence" class="input"></select>
+        </label>
+        <label class="filter">
+          <span id="lbl-rating" class="filter-label">最低评分</span>
+          <select id="f-rating" class="input">
+            <option value="all">全部</option>
+            <option value="1">≥ 1</option>
+            <option value="2">≥ 2</option>
+            <option value="3">≥ 3</option>
+            <option value="4">≥ 4</option>
+            <option value="5">≥ 5</option>
+          </select>
+        </label>
+        <label class="filter">
+          <span id="lbl-sort" class="filter-label">排序</span>
+          <select id="f-sort" class="input">
+            <option value="updated">最近更新</option>
+            <option value="title">标题</option>
+            <option value="year">年份</option>
+            <option value="rating">评分</option>
+          </select>
+        </label>
+      </div>
+      <div class="io-row">
+        <button id="export-json" class="btn btn-ghost" type="button">导出 JSON</button>
+        <button id="export-csv" class="btn btn-ghost" type="button">导出 CSV</button>
+        <button id="export-md" class="btn btn-ghost" type="button">导出 Markdown</button>
+        <label class="btn btn-ghost" for="import-file">导入 JSON</label>
+        <input id="import-file" type="file" accept=".json,application/json" hidden />
+      </div>
+    </section>
+
+    <section id="stats" class="stats" aria-live="polite"></section>
+
+    <section id="list" class="list"></section>
+  </main>
+
+  <!-- Modal -->
+  <div id="modal" class="modal hidden" role="dialog" aria-modal="true">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h2 id="modal-title">新增条目</h2>
+        <button id="modal-close" class="btn btn-ghost" type="button">✕</button>
+      </div>
+      <form id="entry-form" class="entry-form" novalidate>
+        <input type="hidden" id="f-id" />
+        <div class="field">
+          <label for="f-title">标题 <span class="req">*</span></label>
+          <input id="f-title" class="input" type="text" required />
+        </div>
+        <div class="grid-2">
+          <div class="field">
+            <label for="f-type-input">类型</label>
+            <select id="f-type-input" class="input"></select>
+          </div>
+          <div class="field">
+            <label for="f-year">年份</label>
+            <input id="f-year" class="input" type="number" min="1900" max="2100" />
+          </div>
+        </div>
+        <div class="field">
+          <label for="f-authors">作者</label>
+          <input id="f-authors" class="input" type="text" />
+        </div>
+        <div class="field">
+          <label for="f-source">来源 / 期刊</label>
+          <input id="f-source" class="input" type="text" />
+        </div>
+        <div class="grid-2">
+          <div class="field">
+            <label for="f-doi">DOI</label>
+            <input id="f-doi" class="input" type="text" placeholder="10.1001/jama.2020.1234" />
+          </div>
+          <div class="field">
+            <label for="f-url">链接</label>
+            <input id="f-url" class="input" type="url" placeholder="https://…" />
+          </div>
+        </div>
+        <div class="grid-2">
+          <div class="field">
+            <label for="f-specialty-input">专科 / 领域</label>
+            <input id="f-specialty-input" class="input" type="text" list="specialty-list" />
+            <datalist id="specialty-list"></datalist>
+          </div>
+          <div class="field">
+            <label for="f-tags">标签（逗号分隔）</label>
+            <input id="f-tags" class="input" type="text" placeholder="高血压, 抗凝, 急诊" />
+          </div>
+        </div>
+        <div class="grid-2">
+          <div class="field">
+            <label for="f-evidence-input">证据等级 (GRADE)</label>
+            <select id="f-evidence-input" class="input"></select>
+          </div>
+          <div class="field">
+            <label for="f-rating-input">个人评分 (1-5)</label>
+            <select id="f-rating-input" class="input">
+              <option value="">未评分</option>
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+              <option value="4">4</option>
+              <option value="5">5</option>
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label for="f-notes">笔记 / 备注</label>
+          <textarea id="f-notes" class="input" rows="4"></textarea>
+        </div>
+        <div class="form-actions">
+          <button id="doi-fill" class="btn btn-ghost" type="button">用 DOI 自动填充</button>
+          <span class="spacer"></span>
+          <button id="form-cancel" class="btn btn-ghost" type="button">取消</button>
+          <button id="form-save" class="btn btn-primary" type="submit">保存</button>
+        </div>
+        <p id="form-error" class="form-error hidden"></p>
+      </form>
+    </div>
+  </div>
+
+  <footer class="site-footer">
+    <p id="about-text"></p>
+    <p class="muted">MIT License · <a href="https://github.com/LJZAIxsl/clinical-literature-manager" target="_blank" rel="noopener">GitHub</a></p>
+  </footer>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
