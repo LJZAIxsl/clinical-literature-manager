@@ -87,3 +87,60 @@ export function exportMarkdown(entries) {
   }
   return lines.join('\n');
 }
+
+// Generate a BibTeX citation key from an entry (LastnameYear + first title words).
+function bibtexKey(e) {
+  const firstAuthor = (e.authors || '').split(',')[0].trim();
+  const last = (firstAuthor.split(/\s+/).slice(-1)[0] || 'anon').replace(/[^a-zA-Z0-9一-龥]/g, '');
+  const year = e.year || 'nd';
+  const titlePart = (e.title || '')
+    .replace(/[^a-zA-Z0-9一-龥]/g, ' ')
+    .trim()
+    .split(/\s+/)
+    .slice(0, 3)
+    .join('');
+  const key = `${last}${year}${titlePart}`;
+  return key.replace(/[^a-zA-Z0-9]/g, '') || 'ref';
+}
+
+// Escape special characters for the BibTeX value body.
+function bibtexEscape(s) {
+  return String(s == null ? '' : s).replace(/([&%$#_{}])/g, '\\$1');
+}
+
+// Map our entry type onto a reasonable BibTeX entry type.
+function bibtexType(type) {
+  if (type === 'book' || type === 'other') return type === 'book' ? 'book' : 'misc';
+  return 'article';
+}
+
+// Export entries as a BibTeX (.bib) string for Zotero / EndNote / BibTeX users.
+export function exportBibTeX(entries) {
+  const lines = ['% BibTeX export — Clinical Literature Manager'];
+  for (const e of entries || []) {
+    const key = bibtexKey(e);
+    const type = bibtexType(e.type);
+    const authors = (e.authors || '')
+      .split(',')
+      .map((a) => a.trim())
+      .filter(Boolean)
+      .join(' and ');
+    const fields = [
+      ['title', e.title],
+      ['author', authors],
+      ['journal', e.source],
+      ['year', e.year],
+      ['doi', e.doi],
+      ['url', e.url],
+      ['keywords', (e.tags || []).join(', ')],
+      ['note', e.notes],
+    ].filter(([, v]) => v != null && String(v).trim() !== '');
+    lines.push(`@${type}{${key},`);
+    for (const [k, v] of fields) {
+      lines.push(`  ${k} = {${bibtexEscape(v)}}`);
+    }
+    lines.push('}');
+    lines.push('');
+  }
+  return lines.join('\n');
+}
