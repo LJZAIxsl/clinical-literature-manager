@@ -5,12 +5,12 @@ import { buildEntry } from '../js/model.js';
 
 const sample = [
   buildEntry({ title: 'Hypertension guideline', type: 'guideline', specialty: 'Cardiology', tags: ['bp', 'ace'], evidenceLevel: 'high', rating: 5, year: 2021 }),
-  buildEntry({ title: 'Anticoagulation RCT', type: 'rct', specialty: 'Hematology', tags: ['vte'], evidenceLevel: 'moderate', rating: 3, year: 2019 }),
-  buildEntry({ title: 'Sepsis review', type: 'review', specialty: 'ICU', tags: ['sepsis', 'vte'], evidenceLevel: 'low', rating: 2, year: 2022 }),
+  buildEntry({ title: 'Anticoagulation RCT', type: 'rct', specialty: 'Hematology', tags: ['anticoag'], evidenceLevel: 'moderate', rating: 3, year: 2019 }),
+  buildEntry({ title: 'Sepsis review', type: 'review', specialty: 'ICU', tags: ['critcare', 'anticoag'], evidenceLevel: 'low', rating: 2, year: 2022 }),
 ];
 
 test('text search is case-insensitive across fields', () => {
-  const r = searchEntries(sample, { text: 'vte' });
+  const r = searchEntries(sample, { text: 'anticoag' });
   assert.equal(r.length, 2);
 });
 
@@ -44,5 +44,5 @@ test('sort by year descending', () => {
 test('collectFacets returns distinct specialties and tags', () => {
   const f = collectFacets(sample);
   assert.deepEqual(f.specialties, ['Cardiology', 'Hematology', 'ICU']);
-  assert.deepEqual(f.tags, ['ace', 'bp', 'sepsis', 'vte']);
+  assert.deepEqual(f.tags, ['ace', 'anticoag', 'bp', 'critcare']);
 });
