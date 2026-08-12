@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { exportJSON, parseImport, exportCSV, exportMarkdown } from '../js/importExport.js';
+import { exportJSON, parseImport, exportCSV, exportMarkdown, exportBibTeX } from '../js/importExport.js';
 import { buildEntry } from '../js/model.js';
 
 const entries = [
@@ -51,4 +51,24 @@ test('Markdown export mentions titles', () => {
   const md = exportMarkdown(entries);
   assert.ok(md.includes('A'));
   assert.ok(md.includes('B'));
+});
+
+test('BibTeX export emits one entry per item with key and fields', () => {
+  const bib = exportBibTeX(entries);
+  const blocks = bib.split('@').filter((s) => /^(article|misc|book)\{/.test(s.trim()));
+  assert.equal(blocks.length, 2);
+  assert.ok(bib.includes('@article{'));
+  assert.ok(bib.includes('title = {'));
+  assert.ok(bib.includes('}'));
+});
+
+test('BibTeX escapes special characters', () => {
+  const bib = exportBibTeX([buildEntry({ title: 'Cost & Benefit of 10% & 20%', type: 'other', doi: '10.1/x' })]);
+  assert.ok(bib.includes('Cost \\& Benefit'));
+});
+
+test('BibTeX keys are alphanumeric and stable', () => {
+  const single = [buildEntry({ title: 'Hypertension Guideline', authors: 'Smith J', year: 2018, type: 'guideline' })];
+  const key = exportBibTeX(single).match(/@article\{([^,]+),/)[1];
+  assert.ok(/^[a-zA-Z0-9]+$/.test(key));
 });
